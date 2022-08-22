@@ -43,37 +43,47 @@ class MovieDetailsViewController: UIViewController {
         MovieAPIManager.callGETApi(url: genreUrl) { responceDict, status, message in
 
             if status {
-                do{
-                    let encodedData = try NSKeyedArchiver.archivedData(withRootObject: responceDict, requiringSecureCoding: false)
-                    UserDefaults.standard.set(encodedData, forKey: "GenreData")
-                }catch{
-                    print(error)
+                self.genreDetails = [GenreList]()
+                let result = responceDict["genres"] as! [Any]
+                for res in result {
+                    let resData = res as! [String: AnyObject]
+                    var myResult = GenreList()
+                    myResult.id = (resData["id"] as? Int)
+                    myResult.name = resData["name"] as? String
+                    self.genreDetails.append( myResult)
                 }
+                self.moviesDetailTableView.reloadData()
+//                do{
+//                    let encodedData = try NSKeyedArchiver.archivedData(withRootObject: responceDict, requiringSecureCoding: false)
+//                    UserDefaults.standard.set(encodedData, forKey: "GenreData")
+//                }catch{
+//                    print(error)
+//                }
 
             }
         }
-        getGenreDataFromUserDefaults()t
+//        getGenreDataFromUserDefaults()
     }
     
-    func getGenreDataFromUserDefaults(){
-        do{
-            let decoded  = UserDefaults.standard.object(forKey: "GenreData") as! Data
-            let decodedData = try NSKeyedUnarchiver.unarchiveTopLevelObjectWithData(decoded) as! [String:Any]
-            
-            genreDetails = [GenreList]()
-            let result = decodedData["genres"] as! [Any]
-            for res in result {
-                let resData = res as! [String: AnyObject]
-                var myResult = GenreList()
-                myResult.id = (resData["id"] as? Int)
-                myResult.name = resData["name"] as? String
-                genreDetails.append( myResult)
-            }
-            moviesDetailTableView.reloadData()
-        }catch{
-            
-        }
-    }
+//    func getGenreDataFromUserDefaults(){
+//        do{
+//            let decoded  = UserDefaults.standard.object(forKey: "GenreData") as! Data
+//            let decodedData = try NSKeyedUnarchiver.unarchiveTopLevelObjectWithData(decoded) as! [String:Any]
+//
+//            genreDetails = [GenreList]()
+//            let result = decodedData["genres"] as! [Any]
+//            for res in result {
+//                let resData = res as! [String: AnyObject]
+//                var myResult = GenreList()
+//                myResult.id = (resData["id"] as? Int)
+//                myResult.name = resData["name"] as? String
+//                genreDetails.append( myResult)
+//            }
+//            moviesDetailTableView.reloadData()
+//        }catch{
+//
+//        }
+//    }
 
     func getgenreName()->String{
         var str = String()
@@ -96,6 +106,7 @@ class MovieDetailsViewController: UIViewController {
     
 }
 
+
 extension MovieDetailsViewController: UITableViewDelegate, UITableViewDataSource{
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         return 8
@@ -105,6 +116,19 @@ extension MovieDetailsViewController: UITableViewDelegate, UITableViewDataSource
         let cell = moviesDetailTableView.dequeueReusableCell(withIdentifier: CellIdentifier.movieDetailTableViewCell, for: indexPath) as! MovieDetailTableViewCell
        
         
+        let newString = getLAbelString(indexPath: indexPath)
+        cell.lblDetails.attributedText = newString
+        cell.lblDetails.frame.size.height = cell.lblDetails.optimalHeight
+        cell.frame.size.height = cell.lblDetails.frame.height
+        print(cell.lblDetails.frame.size.height,cell.frame.size.height)
+        return cell
+    }
+
+    func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
+        return indexPath.row == 6 ? 200 : 30
+    }
+    
+    func getLAbelString(indexPath: IndexPath)-> NSAttributedString{
         let boldAttribute = [
               NSAttributedString.Key.font: UIFont(name: "HelveticaNeue-Bold", size: 18.0)!
            ]
@@ -142,8 +166,8 @@ extension MovieDetailsViewController: UITableViewDelegate, UITableViewDataSource
             newString.append(boldText)
             newString.append(NSAttributedString(attachment: starAttachment))
             newString.append(regularText)
-            cell.lblDetails.attributedText = newString
-            return cell
+            return newString
+        
         case 6:
             boldText = NSAttributedString(string: "About : ", attributes: boldAttribute)
             regularText = NSAttributedString(string: "\((movieDetail.overview)!)", attributes: regularAttribute)
@@ -158,10 +182,6 @@ extension MovieDetailsViewController: UITableViewDelegate, UITableViewDataSource
         let newString = NSMutableAttributedString()
         newString.append(boldText)
         newString.append(regularText)
-        cell.lblDetails.attributedText = newString
-        cell.frame.size.height = cell.lblDetails.frame.height
-        return cell
+        return newString
     }
-
-    
 }
